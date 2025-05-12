@@ -12,6 +12,7 @@ export const saveDraft = async (emailData) => {
 };
 
 export const sendEmail = async (emailData) => {
+  emailData.receivers = emailData.receivers.split(', ');
   const response = await axios.post(`${API_URL}/emails/send`, emailData, {
     headers: {
       token: localStorage.getItem('token'),

@@ -1,87 +1,82 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
+import { Modal, Form, Input, Button } from 'antd';
 import { saveDraft, sendEmail } from '../../../services/emailService';
+import { getOutbox, getDrafts } from '../../../services/emailService';
 
-const ComposeModal = ({ closeModal, fetchDrafts }) => {
-  const [emailData, setEmailData] = useState({
-    subject: '',
-    body: '',
-    receivers: [],
-  });
+const ComposeModal = ({ visible, onClose, draft, fetch }) => {
+  const [form] = Form.useForm();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEmailData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
+  useEffect(() => {
+    if (draft) {
+      console.log(draft);
+      const transformedDraft = {
+        ...draft,
+        receivers: draft.receivers?.map((r) => r.email).join(', ') || '',
+      };
+      form.setFieldsValue(transformedDraft);
+    }
+  }, [draft, form]);
 
-  const handleReceiverChange = (e) => {
-    const { value } = e.target;
-    const updatedReceivers = value.split(/[ ,]+/).filter((email) => email);
-    setEmailData((prevData) => ({
-      ...prevData,
-      receivers: updatedReceivers,
-    }));
-  };
-
-  const handleSend = async () => {
-    const { subject, body, receivers } = emailData;
-
+  const handleSaveDraft = async () => {
     try {
-      await sendEmail({ subject, body, receivers });
-      fetchDrafts();
-      closeModal();
+      const values = await form.validateFields();
+      await saveDraft(values);
+      alert('Draft saved successfully');
+      await getDrafts();
+      onClose();
     } catch (err) {
-      console.error('Error sending email:', err);
+      alert('Failed to save draft');
     }
   };
 
-  const handleSaveDraft = async () => {
-    const { subject, body, receivers } = emailData;
-
+  const handleSendEmail = async () => {
     try {
-      await saveDraft({ subject, body, receivers });
-      fetchDrafts();
-      closeModal();
+      const values = await form.validateFields();
+      await sendEmail(values);
+      alert('Email sent successfully');
+      await getOutbox();
+      if (draft) await getDrafts();
+      onClose();
     } catch (err) {
-      console.error('Error saving draft:', err);
+      alert('Failed to send email');
     }
   };
 
   return (
-    <div className="modal">
-      <div className="modal-content">
-        <span className="close" onClick={closeModal}>
-          X
-        </span>
-        <h2>Compose Email</h2>
-        <input
-          type="text"
-          name="subject"
-          placeholder="Subject"
-          value={emailData.subject}
-          onChange={handleChange}
-        />
-        <textarea
-          name="body"
-          placeholder="Body"
-          value={emailData.body}
-          onChange={handleChange}
-        />
-        <input
-          type="text"
+    <Modal
+      title={draft ? 'Edit Draft' : 'Compose Email'}
+      visible={visible}
+      onCancel={onClose}
+      footer={[
+        <>
+          <Button key="cancel" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button key="send" type="primary" onClick={handleSendEmail}>
+            Send
+          </Button>
+          <Button key="save" onClick={handleSaveDraft}>
+            Save Draft
+          </Button>
+        </>,
+      ]}
+    >
+      <Form form={form} layout="vertical">
+        <Form.Item label="Subject" name="subject" rules={[{ required: true }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item label="Body" name="body" rules={[{ required: true }]}>
+          <Input.TextArea rows={4} />
+        </Form.Item>
+        <Form.Item
+          label="Receivers"
           name="receivers"
-          placeholder="Receivers (comma separated)"
-          value={emailData.receivers.join(', ')} // Join array with commas for display
-          onChange={handleReceiverChange}
-        />
-        <div className="modal-actions">
-          <button onClick={handleSaveDraft}>Save as Draft</button>
-          <button onClick={handleSend}>Send</button>
-        </div>
-      </div>
-    </div>
+          rules={[{ required: true }]}
+        >
+          <Input />
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import LoginForm from './components/login-form';
 import RegisterForm from './components/register-form';
@@ -41,22 +42,24 @@ const AuthScreen = () => {
       }
       navigate('/main');
     } catch (err) {
-      alert('Error. Please try again.');
+      message.error('Error. Please try again.');
     }
   };
 
   return (
-    <div>
+    <div style={{ padding: '20px' }}>
       <h2>{isLogin ? 'Login' : 'Register'}</h2>
       {isLogin ? (
         <LoginForm data={formData} setData={setFormData} />
       ) : (
         <RegisterForm data={formData} setData={setFormData} />
       )}
-      <button onClick={toggleForm}>
+      <Button type="link" onClick={toggleForm}>
         {isLogin ? 'Switch to Register' : 'Switch to Login'}
-      </button>
-      <button onClick={handleSubmit}>{isLogin ? 'Login' : 'Register'}</button>
+      </Button>
+      <Button type="primary" onClick={handleSubmit}>
+        {isLogin ? 'Login' : 'Register'}
+      </Button>
     </div>
   );
 };

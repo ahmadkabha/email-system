@@ -3,37 +3,57 @@ import ComposeModal from './components/compose-modal';
 import EmailTabs from './components/email-tabs';
 import { getInbox, getOutbox, getDrafts } from '../../services/emailService';
 import { useNavigate } from 'react-router-dom';
+import { Button, Tabs } from 'antd';
+const { TabPane } = Tabs;
 
 const MainScreen = () => {
-  const [showModal, setShowModal] = useState(false);
-  const [inbox, setInbox] = useState([]);
-  const [outbox, setOutbox] = useState([]);
-  const [drafts, setDrafts] = useState([]);
+  const [emails, setEmails] = useState([]);
+  const [tabKey, setTabKey] = useState('inbox');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [currentDraft, setCurrentDraft] = useState(null);
   const navigate = useNavigate();
 
+  const fetchEmails = async (tab) => {
+    try {
+      let data;
+      if (tab === 'inbox') {
+        data = await getInbox();
+      } else if (tab === 'outbox') {
+        data = await getOutbox();
+      } else if (tab === 'drafts') {
+        data = await getDrafts();
+      }
+      setEmails(data);
+    } catch (err) {
+      alert('Failed to fetch emails');
+    }
+  };
+
   useEffect(() => {
-    fetchInbox();
-    fetchOutbox();
-    fetchDrafts();
-  }, []);
+    fetchEmails(tabKey);
+  }, [tabKey]);
 
-  const fetchInbox = async () => {
-    const data = await getInbox();
-    setInbox(data);
+  const handleTabChange = (key) => {
+    setTabKey(key);
   };
 
-  const fetchOutbox = async () => {
-    const data = await getOutbox();
-    setOutbox(data);
+  const handleOpenDraftInModal = (draft) => {
+    setCurrentDraft(draft);
+    setModalVisible(true);
   };
 
-  const fetchDrafts = async () => {
-    const data = await getDrafts();
-    setDrafts(data);
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setCurrentDraft(null);
   };
 
-  const toggleModal = () => {
-    setShowModal(!showModal);
+  const handleRefresh = async () => {
+    try {
+      await fetchEmails(tabKey);
+      alert('Emails refreshed successfully');
+    } catch (error) {
+      alert('Failed to refresh emails');
+    }
   };
 
   const handleLogout = () => {
@@ -43,16 +63,58 @@ const MainScreen = () => {
 
   return (
     <div>
-      <h1>Main Screen</h1>
-      <button onClick={toggleModal}>Compose</button>
+      <Button
+        onClick={handleRefresh}
+        style={{ marginBottom: 16, marginRight: 8 }}
+      >
+        Refresh
+      </Button>
+      <Button
+        onClick={() => setModalVisible(true)}
+        style={{ marginBottom: 16 }}
+      >
+        Compose
+      </Button>
+      <Button
+        onClick={handleLogout}
+        style={{ marginBottom: 16, marginLeft: 8 }}
+      >
+        Logout
+      </Button>
+      <Tabs activeKey={tabKey} onChange={handleTabChange} type="card">
+        <TabPane tab="Inbox" key="inbox">
+          <EmailTabs
+            emails={emails}
+            onOpenDraftInModal={handleOpenDraftInModal}
+            fetchEmails={fetchEmails}
+            tabKey={tabKey}
+          />
+        </TabPane>
+        <TabPane tab="Outbox" key="outbox">
+          <EmailTabs
+            emails={emails}
+            onOpenDraftInModal={handleOpenDraftInModal}
+            fetchEmails={fetchEmails}
+            tabKey={tabKey}
+          />
+        </TabPane>
+        <TabPane tab="Drafts" key="drafts">
+          <EmailTabs
+            emails={emails}
+            onOpenDraftInModal={handleOpenDraftInModal}
+            fetchEmails={fetchEmails}
+            tabKey={tabKey}
+          />
+        </TabPane>
+      </Tabs>
 
-      <button onClick={handleLogout}>Logout</button>
-
-      {showModal && (
-        <ComposeModal closeModal={toggleModal} fetchDrafts={fetchDrafts} />
+      {modalVisible && (
+        <ComposeModal
+          draft={currentDraft}
+          visible={modalVisible}
+          onClose={handleCloseModal}
+        />
       )}
-
-      <EmailTabs inbox={inbox} outbox={outbox} drafts={drafts} />
     </div>
   );
 };
