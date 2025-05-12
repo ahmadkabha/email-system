@@ -1,7 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const userController = require('./src/modules/users/controller/user.controller');
+const userRouter = require('./src/modules/users/routes/user.routes');
+const emailRouter = require('./src/modules/email/routes/email.routes');
 
 const app = express();
 app.use(express.json());
@@ -11,10 +12,8 @@ mongoose
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.error(err));
 
-const router = express.Router();
-router.post('/auth/register', userController.register);
-router.post('/auth/login', userController.login);
-app.use(router);
+app.use('/emails', emailRouter);
+app.use('/users', userRouter);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

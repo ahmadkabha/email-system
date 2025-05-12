@@ -1,5 +1,5 @@
 const User = require('../model/user.model');
-const bcrypt=require('bcryptjs')
+const bcrypt = require('bcryptjs');
 async function createUser(userData) {
   // Hashing the password
   const salt = await bcrypt.genSalt(10);

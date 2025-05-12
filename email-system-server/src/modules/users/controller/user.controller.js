@@ -3,7 +3,6 @@ const generateToken = require('../../auth/utils/generate-token');
 
 const register = async (req, res) => {
   try {
-    console.log(req.body)
     const { firstName, lastName, email, password } = req.body;
 
     const existingUser = await userService.findUserByEmail(email);
