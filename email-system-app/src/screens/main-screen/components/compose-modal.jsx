@@ -8,11 +8,12 @@ const ComposeModal = ({ visible, onClose, draft, fetch }) => {
 
   useEffect(() => {
     if (draft) {
-      console.log(draft);
       const transformedDraft = {
         ...draft,
         receivers: draft.receivers?.map((r) => r.email).join(', ') || '',
+        emailId: draft._id,
       };
+      console.log(transformedDraft);
       form.setFieldsValue(transformedDraft);
     }
   }, [draft, form]);
@@ -20,6 +21,7 @@ const ComposeModal = ({ visible, onClose, draft, fetch }) => {
   const handleSaveDraft = async () => {
     try {
       const values = await form.validateFields();
+      console.log(values);
       await saveDraft(values);
       alert('Draft saved successfully');
       await getDrafts();
@@ -73,6 +75,10 @@ const ComposeModal = ({ visible, onClose, draft, fetch }) => {
           name="receivers"
           rules={[{ required: true }]}
         >
+          <Input />
+        </Form.Item>
+
+        <Form.Item name="emailId" style={{ display: 'none' }}>
           <Input />
         </Form.Item>
       </Form>
