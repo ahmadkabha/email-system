@@ -2,7 +2,7 @@ const emailService = require('../service/email.service');
 
 const getDrafts = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.userId;
     const drafts = await emailService.getDrafts(userId);
     res.status(200).json(drafts);
   } catch (error) {
@@ -14,7 +14,7 @@ const getDrafts = async (req, res) => {
 
 const getInbox = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.userId;
     const inbox = await emailService.getInbox(userId);
     res.status(200).json(inbox);
   } catch (error) {
@@ -26,7 +26,7 @@ const getInbox = async (req, res) => {
 
 const getOutbox = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.userId;
     const outbox = await emailService.getOutbox(userId);
     res.status(200).json(outbox);
   } catch (error) {
@@ -38,7 +38,8 @@ const getOutbox = async (req, res) => {
 
 const saveDraft = async (req, res) => {
   try {
-    const { subject, body, sender, receivers, emailId } = req.body;
+    const sender = req.userId;
+    const { subject, body, receivers, emailId } = req.body;
     const email = await emailService.saveDraft(
       subject,
       body,
@@ -56,7 +57,8 @@ const saveDraft = async (req, res) => {
 
 const sendEmail = async (req, res) => {
   try {
-    const { subject, body, sender, receivers, emailId } = req.body;
+    const sender = req.userId;
+    const { subject, body, receivers, emailId } = req.body;
     const email = await emailService.sendEmail(
       subject,
       body,
