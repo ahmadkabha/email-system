@@ -1,7 +1,19 @@
 const Email = require('../model/email.model');
+const User = require('../../users/model/user.model');
 
 // Save email as draft(or update draft if emailId is provided)
-async function saveDraft(subject, body, sender, receivers, emailId = null) {
+async function saveDraft(
+  subject,
+  body,
+  sender,
+  receiversEmails,
+  emailId = null
+) {
+  const receivers = await User.find({ email: { $in: receiversEmails } }).select(
+    '_id'
+  );
+  const receiverIds = receivers.map((receiver) => receiver._id);
+
   let email;
 
   if (emailId) {
@@ -12,7 +24,7 @@ async function saveDraft(subject, body, sender, receivers, emailId = null) {
 
     email.subject = subject;
     email.body = body;
-    email.receivers = receivers;
+    email.receivers = receiverIds;
     email.status = 'draft';
   } else {
     email = new Email({
@@ -36,8 +48,6 @@ async function sendEmail(
   emailId = null
 ) {
   let email;
-
-  const User = require('../../users/model/user.model');
   const receivers = await User.find({ email: { $in: receiversEmails } }).select(
     '_id'
   );
