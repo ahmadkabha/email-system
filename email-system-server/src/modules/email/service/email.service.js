@@ -27,9 +27,24 @@ async function saveDraft(subject, body, sender, receivers, emailId = null) {
   return email.save();
 }
 
-// Send email(create a new one or send an existing draft)
-async function sendEmail(subject, body, sender, receivers, emailId = null) {
+// Send email (create a new one or send an existing draft)
+async function sendEmail(
+  subject,
+  body,
+  sender,
+  receiversEmails,
+  emailId = null
+) {
   let email;
+
+  const User = require('../../users/model/user.model');
+  const receivers = await User.find({ email: { $in: receiversEmails } }).select(
+    '_id'
+  );
+  if (receivers.length !== receiversEmails.length) {
+    throw new Error('One or more receiver emails are invalid');
+  }
+  const receiverIds = receivers.map((receiver) => receiver._id);
 
   if (emailId) {
     email = await Email.findById(emailId);
@@ -38,14 +53,14 @@ async function sendEmail(subject, body, sender, receivers, emailId = null) {
     }
     email.subject = subject;
     email.body = body;
-    email.receivers = receivers;
+    email.receivers = receiverIds;
     email.status = 'sent';
   } else {
     email = new Email({
       subject,
       body,
       sender,
-      receivers,
+      receivers: receiverIds,
       status: 'sent',
     });
   }
